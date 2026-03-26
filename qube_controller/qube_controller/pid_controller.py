@@ -1,8 +1,8 @@
 import rclpy
 from rclpy.node import Node
 
+from std_msgs.msg import Float64, Float64MultiArray
 from sensor_msgs.msg import JointState
-from std_msgs.msg import Float64MultiArray
 
 
 class PIDController(Node):
@@ -16,37 +16,58 @@ class PIDController(Node):
             10
         )
 
+        self.target_subscription = self.create_subscription(
+            Float64,
+            '/target_position',
+            self.target_callback,
+            10
+        )
+
         self.publisher = self.create_publisher(
             Float64MultiArray,
             '/velocity_controller/commands',
             10
         )
 
-        self.timer = self.create_timer(0.02, self.control_loop)  # 50 Hz
+        self.timer = self.create_timer(0.02, self.control_loop)
 
-        self.kp = 5.0
+        self.kp = 2.0
         self.ki = 0.0
-        self.kd = 0.5
+        self.kd = 0.2
 
         self.target_position = 0.0
-
         self.position = 0.0
         self.velocity = 0.0
+        self.have_state = False
 
         self.integral = 0.0
         self.prev_error = 0.0
         self.last_time = self.get_clock().now()
 
+        self.max_command = 3.0
+
+    def target_callback(self, msg: Float64):
+        self.target_position = msg.data
+        self.get_logger().info(f'Ny referanse: {self.target_position:.3f} rad')
+
     def joint_state_callback(self, msg: JointState):
-        if not msg.position:
+        if 'motor_joint' not in msg.name:
             return
 
-        self.position = msg.position[0]
+        i = msg.name.index('motor_joint')
+        self.position = msg.position[i]
 
-        if msg.velocity:
-            self.velocity = msg.velocity[0]
+        if len(msg.velocity) > i:
+            self.velocity = msg.velocity[i]
+        else:
+            self.velocity = 0.0
+
+        self.have_state = True
 
     def control_loop(self):
+        if not self.have_state:
+            return
+
         now = self.get_clock().now()
         dt = (now - self.last_time).nanoseconds / 1e9
 
@@ -58,6 +79,7 @@ class PIDController(Node):
         derivative = (error - self.prev_error) / dt
 
         u = self.kp * error + self.ki * self.integral + self.kd * derivative
+        u = max(min(u, self.max_command), -self.max_command)
 
         msg = Float64MultiArray()
         msg.data = [u]
