@@ -26,12 +26,12 @@ Prosjektet består av følgende pakker:
 
 1. Bygg workspace:
 
-colcon build
-source install/setup.bash
-ros2 launch qube_bringup bringup.launch.py
+- colcon build
+- source install/setup.bash
+- ros2 launch qube_bringup bringup.launch.py
 
 Kjør pid_controller:
-ros2 run qube_controller pid_controller
+- ros2 run qube_controller pid_controller
 
 Sett vinkel:
-ros2 topic pub /target_position std_msgs/msg/Float64 "{data: 1.0}"
+-ros2 topic pub /target_position std_msgs/msg/Float64 "{data: 1.0}"
