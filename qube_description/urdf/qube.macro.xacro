@@ -10,6 +10,9 @@
     <xacro:property name="indicator_width" value="0.002"/>
     <xacro:property name="indicator_height" value="0.002"/>
 
+
+<!-- Prefix brukes for å unngå navnekonflikter hvis flere instanser brukes. -->
+
     <link name="${prefix}base_link"/>
 
     <link name="${prefix}stator_link">

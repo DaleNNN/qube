@@ -18,6 +18,9 @@
     <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
 
+
+<!-- Argumenter som gjør det mulig å velge device, baud_rate og simulering fra launch -->
+
   <xacro:qube_driver_ros2_control
     name="qube_driver"
     prefix=""

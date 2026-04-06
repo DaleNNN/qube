@@ -11,6 +11,7 @@ class PIDController(Node):
     def __init__(self):
         super().__init__('pid_controller')
 
+        # Leser tilstand fra Quben
         self.subscription = self.create_subscription(
             JointState,
             '/joint_states',
@@ -18,6 +19,7 @@ class PIDController(Node):
             10
         )
 
+        # Leser ønsket vinkel
         self.target_subscription = self.create_subscription(
             Float64,
             '/target_position',
@@ -25,55 +27,61 @@ class PIDController(Node):
             10
         )
 
+        # Sender hastighetskommando til kontroller
         self.publisher = self.create_publisher(
             Float64MultiArray,
             '/velocity_controller/commands',
             10
         )
 
+        # Kontroll-loop (50 Hz)
         self.timer = self.create_timer(0.02, self.control_loop)
 
-        # Gains
+        # PID gains
         self.kp = 2.0
         self.ki = 0.0
-        self.kd = 0.2
+        self.kd = 0.1
 
-        # State
+        # Tilstand
         self.target_position = 0.0
         self.position = 0.0
         self.velocity = 0.0
         self.have_state = False
 
-        # PID internals
+        # PID intern tilstand
         self.integral = 0.0
         self.last_time = self.get_clock().now()
 
-        # Limits
-        self.max_command = 3.0
-        self.max_integral = 2.0  # enkel begrensning på integral-leddet
+        # Begrensninger
+        self.max_command = 100.0
+        self.max_integral = 2.0
+        self.output_scale = 10.0
 
-        # For å ikke spamme loggen ved 50 Hz
+        # Reduser logging
         self.debug_counter = 0
 
     @staticmethod
     def wrap_to_pi(angle: float) -> float:
+        # Sikrer korteste vei rundt sirkelen
         return (angle + math.pi) % (2 * math.pi) - math.pi
 
     def target_callback(self, msg: Float64):
         self.target_position = msg.data
 
-        # Reset intern tilstand ved ny referanse
+        # Reset integrator ved ny referanse
         self.integral = 0.0
 
         self.get_logger().info(f'Ny referanse: {self.target_position:.3f} rad')
 
     def joint_state_callback(self, msg: JointState):
+        # Henter tilstand for motor_joint
         if 'motor_joint' not in msg.name:
             return
 
         i = msg.name.index('motor_joint')
         self.position = msg.position[i]
 
+        # Håndterer tilfelle uten velocity
         if len(msg.velocity) > i:
             self.velocity = msg.velocity[i]
         else:
@@ -91,27 +99,28 @@ class PIDController(Node):
         if dt <= 0.0:
             return
 
-        # Korteste vei rundt sirkelen
+        # Feil (korteste vei)
         error = self.wrap_to_pi(self.target_position - self.position)
 
-        # Integrator
+        # Integrator (med begrensning)
         self.integral += error * dt
         self.integral = max(min(self.integral, self.max_integral), -self.max_integral)
 
-        # PD/PID med målt hastighet som "D"-ledd
+        # PID (D basert på målt hastighet)
         u_unsat = self.kp * error + self.ki * self.integral - self.kd * self.velocity
 
-        # Metning
-        u = max(min(u_unsat, self.max_command), -self.max_command)
+        # Skalering og metning
+        u = self.output_scale * u_unsat
+        u = max(min(u, self.max_command), -self.max_command)
 
-
+        # Publiser kommando
         msg = Float64MultiArray()
         msg.data = [u]
         self.publisher.publish(msg)
 
         self.last_time = now
 
-        # Logg ca. hver 10. syklus (~5 Hz ved 50 Hz loop)
+        # Periodisk logging
         self.debug_counter += 1
         if self.debug_counter >= 10:
             self.get_logger().info(
