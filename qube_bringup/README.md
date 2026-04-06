@@ -1,56 +1,29 @@
-Denne pakken brukes til å starte hele Qube-systemet i ROS2. Den kobler sammen beskrivelse (qube\_description), driver (qube\_driver) og visualisering (RViz).
+Denne pakken brukes til å starte hele Qube-systemet i ROS2. Den kobler sammen beskrivelse (`qube_description`), driver (`qube_driver`) og visualisering (RViz).
 
+## Innhold:
 
+- `launch/bringup.launch.py`  
+  Starter hele systemet (driver, `robot_state_publisher` og RViz)
 
-Innhold:
+- `urdf/controlled_qube.urdf.xacro`  
+  URDF med både robotbeskrivelse og ROS2 Control-konfigurasjon
 
+## Hvordan kjøre:
 
+```
+ros2 launch qube_bringup bringup.launch.py
+```
 
-\- launch/bringup.launch.py  
+## Parametere:
 
-&#x20; Starter hele systemet (driver, robot\_state\_publisher og RViz)
+- `baud_rate` (default: 115200)  
+- `device` (default: /dev/ttyACM0)  
+- `simulation` (default: false)  
 
-
-
-\- urdf/controlled\_qube.urdf.xacro
-
-&#x20; URDF med både robotbeskrivelse og ROS2 Control-konfigurasjon
-
-
-
-
-
-Hvordan kjøre:
-
-
-
-ros2 launch qube\_bringup bringup.launch.py
-
-
-
-
-
-Parametere:
-
-
-
-\- baud\_rate (default: 115200)  
-
-\- device (default: /dev/ttyACM0)  
-
-\- simulation (default: false)  
-
-
-
-Eksempel:
-
-
+## Eksempel:
 
 Kjør med simulering:
 
-
-
-bash
-
-ros2 launch qube\_bringup bringup.launch.py device:=/dev/ttyACM0 baud\_rate:=115200 simulation:=true
-
+```bash
+ros2 launch qube_bringup bringup.launch.py device:=/dev/ttyACM0 baud_rate:=115200 simulation:=true
+```
