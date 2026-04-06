@@ -1,48 +1,23 @@
 Denne pakken inneholder en URDF/Xacro-beskrivelse av Quanser Qube for bruk i ROS2.
 
+## Innhold
 
+- `urdf/qube.macro.xacro`  
+  Inneholder en gjenbrukbar Xacro-makro som beskriver selve Quben.
 
-Innhold:
+- `urdf/qube.urdf.xacro`  
+  En enkel scene som instansierer Quben og plasserer den i verden.
 
+- `launch/view_qube.launch.py`  
+  Starter visualisering av Quben i RViz.
 
+- `config/qube_config.rviz`  
+  RViz-konfigurasjon for visualisering.
 
-\- urdf/qube.macro.xacro
-
-&#x20; Inneholder en gjenbrukbar Xacro-makro som beskriver selve Quben.
-
-
-
-\- urdf/qube.urdf.xacro
-
-&#x20; En enkel scene som instansierer Quben og plasserer den i verden.
-
-
-
-\- launch/view\_qube.launch.py 
-
-&#x20; Starter visualisering av Quben i RViz.
-
-
-
-\- config/qube\_config.rviz
-
-&#x20; RViz-konfigurasjon for visualisering.
-
-
-
-
-
-\## Hvordan kjøre
-
-
-
-
+## Hvordan kjøre
 
 Bygg workspace og kjør:
 
-
-
+```bash
 source install/setup.bash
-
-ros2 launch qube\_description view\_qube.launch.py
-
+ros2 launch qube_description view_qube.launch.py
